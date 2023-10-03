@@ -52,6 +52,28 @@ contract ContractMsg {
         );
     }
 
+
+    /**
+       @notice A simple function that sends a message with a pre-determined payload.
+    */
+    function sendMessageValue(
+        uint256 contractAddress,
+        uint256 selector,
+        uint256 value
+    )
+        external
+        payable
+    {
+        uint256[] memory payload = new uint256[](1);
+        payload[0] = value;
+
+        _snMessaging.sendMessageToL2{value: msg.value}(
+            contractAddress,
+            selector,
+            payload
+        );
+    }
+
     /**
        @notice Manually consumes a message that was received from L2.
 
