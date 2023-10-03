@@ -102,10 +102,12 @@ are already written to replace `cast` usage.
    # In the terminal that is inside the cairo folder you've used to run starkli commands to declare (ensure you've sourced the katana.env file).
 
    starkli invoke 0x03e4b41d5bf9ece15bd6e194c734b87bf338b262cbe411d5b2d2facab245e9e9 \
-       send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1
+       send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 \
+       --keystore-password ""
 
    starkli invoke 0x03e4b41d5bf9ece15bd6e194c734b87bf338b262cbe411d5b2d2facab245e9e9 \
-       send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2
+       send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2 \
+       --keystore-password ""
    ```
 
    You will then see Katana sending transactions to L1 to register the hashes of the messages,
