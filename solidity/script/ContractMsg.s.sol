@@ -8,7 +8,7 @@ import "src/ContractMsg.sol";
 /**
    Deploys only the ContractMsg.
 */
-contract LocalSetup is Script {
+contract Deploy is Script {
     function setUp() public {}
 
     function run() public{
