@@ -1,126 +1,132 @@
-# Smart contracts
+# Messaging tutorial Smart Contract
+
+You can find here smart contracts for testing the messaging system between Starknet and Ethereum.
 
 ## Requirements
 
-Please before starting, install:
+Please before start, install:
 
 -   [scarb](https://docs.swmansion.com/scarb/) to build cairo contracts.
 -   [starkli](https://github.com/xJonathanLEI/starkli) to interact with Katana.
+-   [katana](https://www.dojoengine.org/en/) to install Katana, that belongs to dojo.
 -   [foundry](https://book.getfoundry.sh/getting-started/installation) to interact with Anvil.
 
-## Contracts
-
-In this folder you will find smart contracts ready to be declared / deployed
-to test how the messaging can work.
-
-## L1 (Ethereum) - L2 (Starknet)
-
-The first messaging is L1-L2 messaging, where Katana is used as a dev Starknet
-sequencer. In this scenario, you want to spin up Katana to test your Starknet
-contracts before reaching the testnet and use Anvil to dev on Ethereum.
-
-To test this scenario, you can use the associated Makefiles. But the flow is the following:
-
-1. Starting Anvil and deploy the `StarknetMessagingLocal` that simulates the work
-   done by the Starknet contract on Ethereum for messaging. Then deploy the `Contract1.sol`
-   on ethereum to send/consume messages from Starknet.
-
-2. Starting Katana as your Starknet dev node and declare/deploy `contract_msg_l1.cairo` contract. This contract has example to send/receive messages from Ethereum.
-
-3. Then you can use `starkli` and `cast` to target the contracts on both chain to test
-   messaging in both ways.
-
-How to run the scripts:
-
--   Starts Anvil in a terminal.
--   Starts Katana in an other terminal on default port 5050 with the messaging configuration that is inside the:
-    `katana --messaging ~/dojo/crates/katana/core/contracts/messaging/anvil.messaging.json`
--   Open an other terminal and `cd ~/dojo/crates/katana/core/contracts/messaging`.
-
-Then you can then use pre-defined commands to interact with the contracts.
-If you change the code or addresses, you may want to edit the Makefile. But
-those Makefiles are only here for quick testing while developing on messaging
-and quick demo.
-
+If it's your first time cloning the repository, please go into `solidity` folder and run:
 ```bash
-# Setup anvil with messaging + Contract1.sol deployed.
-make -sC ./solidity/ deploy_messaging_contracts
-
-# Declare and deploy contract_msg_l1.cairo.
-make -sC ./cairo/ setup_for_l1_messaging
-
-# Send message L1 -> L2 with a single value.
-make -sC solidity/ send_msg selector_str=msg_handler_value payload="[123]"
-
-# Send message L1 -> L2 with a serialized struct.
-make -sC solidity/ send_msg selector_str=msg_handler_struct payload="[1,2]"
-
-# Send message L2 -> L1 to be manually consumed.
-make -sC cairo/ send_msg_value_l1 value=2
-
-# Consume the messag previously sent. You can try to call it once and see the second one reverting.
-make -sC solidity/ consume_msg payload="[2]"
+forge install
 ```
 
-## L2 (Starknet) - L3 (Appchain) [Experimental]
+## Setup Ethereum contracts
 
-The second messaging is when you may want your appchain (Katana based) to communicate
-with Starknet. In this case, the Katana sequencer (L3) will listen to the messages
-emitted by a specific messaging contract on Starknet.
+To setup Ethereum part for local testing, please follow those steps:
 
-The messaging in this scenario works exactly the same way as it does for L1-L2. But in this
-case, the settlement layer is not Ethereum, but Starknet.
+1. Starts Anvil in a new terminal with the command `anvil`.
 
-There is a feature that is experimental, which allows the messages to be `executed` instead
-of the regular registering/consumption of the message, which is totally manual.
+2. In an other terminal, change directory into the solidity folder:
+   ```bash
+   cd solidity
 
-You can also use the Makefile to setup the chains, but the flow is the following:
+   # Copies the example of anvil configuration file into .env that is loaded by
+   # foundry automatically.
+   cp anvil.env .env
+   ```
 
-1. Starting Katana (1) to simulate Starknet network. On this Katana instance, you will
-   deploy `appchain_messaging.cairo` which is the analogue contract of `StarknetMessagingLocal` in the L1-L2 messaging. This contract is responsible for sending/registering/executing messages.
-   Then you can deploy `contract_1.cairo` to send/consume message and test the execution
-   of smart contract function on Starknet from the appchain.
+2. Then, we will deploy the `StarknetMessagingLocal` contract that simulates the work
+   done by the `StarknetMessaging` core contract on Ethereum. Then we will deploy the `ContractMsg.sol`
+   to send/receive message. To do so, run the following:
+   ```bash
+   forge script script/LocalTesting.s.sol:LocalSetup --broadcast --rpc-url ${ETH_RPC_URL}
+   ```
 
-    You can totally deploy `appchain_messaging.cairo` on Starknet to test. **Please be aware
-    this contract is not audited for now and only experimental without security considerations yet**.
-    Be sure you control who is able to send/execute messages to be safe.
+## Setup Starknet contracts
 
-2. Starting Katana (2) to represent your appchain. On this Katana instance, you will deploy
-   `contract_msg_starknet.cairo` contract. This contract can send/execute/receive message
-   from/to your Katana (1).
+To setup Starknet contract, please follow those steps:
 
-3. Then, you can interact with `contract_msg_starknet.cairo` on the appchain (Katana 2) to send/execute messages on Starknet. On Katana (1) which is Starknet, you can interact with `contract_1.cairo` to send/consume and see contract execution.
+1. Update katana to have the latest features by running:
+   ```bash
+   dojoup -v nightly
+   ```
 
-How to run the scripts:
+2. Then opens a terminal and starts katana by passing the messaging configuration where Anvil contract address and account keys are setup:
+   ```bash
+   katana --messaging anvil.messaging.json
+   ```
 
--   Starts Katana (1) to simulate starknet on a new terminal with default port 5050.
--   Starts Katana (2) for your appchain on a new terminal with port 6060 and the configuration for messaging: `katana --messaging crates/katana/core/contracts/messaging/l3.messaging.json -p 6060`
--   Open an other terminal and `cd ~/dojo/crates/katana/core/contracts/messaging`.
+   Katana will now poll anvil logs exactly as the Starknet sequencer does on the `StarknetMessaging` contract on ethereum.
 
-Then you can then use pre-defined commands to interact with the contracts.
-If you change the code or addresses, you may want to edit the Makefile. But
-those Makefiles are only here for quick testing while developing on messaging
-and quick demo.
+3. On a new terminal, go into cairo folder `cd cairo` and use starkli to declare and deploy the contracts:
+   ```bash
+   # To ensure starkli env variables are setup correctly.
+   source katana.env
+
+   scarb build
+
+   starkli declare target/dev/messaging_tuto_contract_msg.sierra.json --keystore-password ""
+
+   starkli deploy 0x048ffd12e3e126938f0695eef1357eb7c45677e65d947cf4891b9598637703ca \
+       --salt 0x1234 \
+       --keystore-password ""
+   ```
+
+## Interaction between the two chains
+
+Once you have both dev nodes setup with contracts deployed, we can start interacting with them.
+You can use `starkli` and `cast` to send transactions. But for the sake of simplicity, some scripts
+are already written to replace `cast` usage.
+
+It's recommended that you open 2 terminals again, one for sending starkli commands, the other
+to execute the solidity scripts.
 
 ```bash
-# Setup both katana at once with appchain_messaging and contract_1 on katana 1 (starknet),
-# and contract_msg_starknet on katana 2 (l3).
-make -sC ./cairo/ setup_l2_messaging
-make -sC ./cairo/ setup_l3_messaging
+# terminal 1
+cd cairo/
+source katana.env
 
-# Send a message L3 -> L2 to be manually consumed.
-make -sC ./cairo/ send_msg_value_l2 value=3
-
-# Consume the message on L2 (it's a span, so length first).
-make -sC ./cairo/ consume_msg_from_l3 payload="1 3"
-
-# Send a message L3 -> L2 to be executed directly on L2.
-make -sC ./cairo/ exec_msg_l2 selector_str=set_value value=2
-
-# Verify the execution by getting the value.
-make -sC ./cairo/ get_value_l2
-
-# Send a message L2 -> L3.
-# Try to change the value to see the transaction error.
-make -sC cairo/ send_msg_l3 selector_str=msg_handler_value value=888
+# terminal 2
+cd solidity
+cp anvil.env .env
+source .env
 ```
+
+### To send messages L1 -> L2:
+   ```bash
+   cd solidity
+   cp anvil.env .env
+   source .env
+
+   forge script script/SendMessage.s.sol:Value --broadcast --rpc-url ${ETH_RPC_URL}
+   forge script script/SendMessage.s.sol:Struct --broadcast --rpc-url ${ETH_RPC_URL}
+   ```
+
+   You will then see Katana picking up the messages, and executing exactly as Starknet would
+   do with Ethereum on testnet or mainnet.
+   You can try to change the payload into the scripts to see how the contract on starknet behaves receiveing the message. Try to set both values to 0 for the struct. In the case of the value, you'll see a warning in Katana saying `Invalid value` because the contract is expected `123`.
+
+### To send messages L2 -> L1:
+   ```bash
+   cd cairo/
+   source katana.env
+
+   starkli invoke 0x03e4b41d5bf9ece15bd6e194c734b87bf338b262cbe411d5b2d2facab245e9e9 \
+       send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1
+
+   starkli invoke 0x03e4b41d5bf9ece15bd6e194c734b87bf338b262cbe411d5b2d2facab245e9e9 \
+       send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2
+   ```
+
+   You will then see Katana sending transactions to L1 to register the hashes of the messages,
+   simulating the work done by the `StarknetMessaging` contract on L1 on testnet or mainnet.
+
+   To then consume the messaging, you must send a transaction on Anvil, exactly as you would do
+   on L1 for testnet or mainnet.
+
+   ```bash
+   # Try to run a first time, it should pass. Try to run a second time, you should have the
+   # error INVALID_MESSAGE_TO_CONSUME because the message is already consumed.
+   # Or try to change the payload value or address in the script, to see how the consumption
+   # of the message is denied.
+   forge script script/ConsumeMessage.s.sol:Value --broadcast -vvvv --rpc-url ${ETH_RPC_URL}
+   
+   # Same here, try to consume a message sent with a struct inside.
+   forge script script/ConsumeMessage.s.sol:Struct --broadcast -vvvv --rpc-url ${ETH_RPC_URL}
+   ```

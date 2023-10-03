@@ -68,6 +68,7 @@ mod contract_msg {
     }
 
     /// Handles a message received from L1.
+    /// In this example, the handler is expecting the data members to both be greater than 0.
     ///
     /// # Arguments
     ///
@@ -77,8 +78,8 @@ mod contract_msg {
     fn msg_handler_struct(ref self: ContractState, from_address: felt252, data: MyData) {
         // assert(from_address == ...);
 
-        assert(data.a == 1, 'data.a is invalid');
-        assert(data.b == 2, 'data.b is invalid');
+        assert(!data.a.is_zero(), 'data.a is invalid');
+        assert(!data.b.is_zero(), 'data.b is invalid');
     }
 
     #[external(v0)]
