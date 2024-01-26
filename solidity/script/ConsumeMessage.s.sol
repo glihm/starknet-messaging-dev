@@ -11,12 +11,12 @@ import "src/ContractMsg.sol";
 contract Value is Script {
     uint256 _privateKey;
     address _contractMsgAddress;
-    uint256 _l2Account;
+    uint256 _l2Contract;
 
     function setUp() public {
         _privateKey = vm.envUint("ACCOUNT_PRIVATE_KEY");
         _contractMsgAddress = vm.envAddress("CONTRACT_MSG_ADDRESS");
-        _l2Account = vm.envUint("L2_ACCOUNT");
+        _l2Contract = vm.envUint("L2_CONTRACT_ADDRESS");
     }
 
     function run() public{
@@ -27,10 +27,9 @@ contract Value is Script {
         uint256[] memory payload = new uint256[](1);
         payload[0] = 1;
 
-        // The address must be the address that has sent the message.
-        // In out case, it's the katana account 0.
+        // The address must be the contract's address that has sent the message.
         ContractMsg(_contractMsgAddress).consumeMessageValue(
-            _l2Account,
+            _l2Contract,
             payload);
 
         vm.stopBroadcast();
@@ -43,12 +42,12 @@ contract Value is Script {
 contract Struct is Script {
     uint256 _privateKey;
     address _contractMsgAddress;
-    uint256 _l2Account;
+    uint256 _l2Contract;
 
     function setUp() public {
         _privateKey = vm.envUint("ACCOUNT_PRIVATE_KEY");
         _contractMsgAddress = vm.envAddress("CONTRACT_MSG_ADDRESS");
-        _l2Account = vm.envUint("L2_ACCOUNT");
+        _l2Contract = vm.envUint("L2_CONTRACT_ADDRESS");
     }
 
     function run() public{
@@ -60,7 +59,7 @@ contract Struct is Script {
         payload[1] = 2;
 
         ContractMsg(_contractMsgAddress).consumeMessageStruct(
-            _l2Account,
+            _l2Contract,
             payload);
 
         vm.stopBroadcast();

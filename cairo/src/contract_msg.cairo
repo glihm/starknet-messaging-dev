@@ -42,6 +42,28 @@ mod contract_msg {
     #[storage]
     struct Storage {}
 
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        ValueReceivedFromL1: ValueReceived,
+        StructReceivedFromL1: StructReceived,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct ValueReceived {
+        #[key]
+        l1_address: felt252,
+        value: felt252,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct StructReceived {
+        #[key]
+        l1_address: felt252,
+        data_a: felt252,
+        data_b: felt252,
+    }
+
     /// Handles a message received from L1.
     ///
     /// Only functions that are annotated with `#[l1_handler]` can
@@ -65,6 +87,8 @@ mod contract_msg {
         // assert(from_address == ...);
 
         assert(value == 123, 'Invalid value');
+
+        self.emit(ValueReceived { l1_address: from_address, value, });
     }
 
     /// Handles a message received from L1.
@@ -80,9 +104,11 @@ mod contract_msg {
 
         assert(!data.a.is_zero(), 'data.a is invalid');
         assert(!data.b.is_zero(), 'data.b is invalid');
+
+        self.emit(StructReceived { l1_address: from_address, data_a: data.a, data_b: data.b, });
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ContractL1Impl of IContractL1<ContractState> {
         fn send_message_value(ref self: ContractState, to_address: EthAddress, value: felt252) {
             // Note here, we "serialize" the felt252 value, as the payload must be

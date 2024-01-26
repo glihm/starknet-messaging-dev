@@ -27,7 +27,7 @@ contract Value is Script {
         vm.startBroadcast(_privateKey);
 
         uint256[] memory payload = new uint256[](1);
-        payload[0] = 1;
+        payload[0] = 123;
 
         // Remember that there is a cost of at least 20k wei to send a message.
         // Let's send 30k here to ensure that we pay enough for our payload serialization.
