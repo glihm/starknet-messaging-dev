@@ -50,9 +50,10 @@ To setup Ethereum part for local testing, please follow those steps:
 
 To setup Starknet contract, please follow those steps:
 
-1. Update katana to have the latest features by running:
+1. Update katana on the 0.4.4 version to match starkli compatible version (temporary fix due to RPC incompatibility):
    ```bash
-   dojoup -v nightly
+   starkliup -v 0.1.20
+   dojoup -v 0.4.4
    ```
 
 2. Then open a terminal and starts katana by passing the messaging configuration where Anvil contract address and account keys are setup:
@@ -71,9 +72,9 @@ To setup Starknet contract, please follow those steps:
 
    scarb build
 
-   starkli declare target/dev/messaging_tuto_contract_msg.sierra.json --keystore-password ""
+   starkli declare ./target/dev/messaging_tuto_contract_msg.contract_class.json --keystore-password ""
 
-   starkli deploy 0x048ffd12e3e126938f0695eef1357eb7c45677e65d947cf4891b9598637703ca \
+   starkli deploy 0x02d6b666ade3a9ee98430d565830604b90954499c590fa05a9844bdf4d3a574b \
        --salt 0x1234 \
        --keystore-password ""
    ```
@@ -88,13 +89,22 @@ are already written to replace `cast` usage.
 ### To send messages L1 -> L2:
 ```bash
 # In the terminal that is inside solidity folder you've used to run forge script previously (ensure you've sourced the .env file).
-
 forge script script/SendMessage.s.sol:Value --broadcast --rpc-url ${ETH_RPC_URL}
 forge script script/SendMessage.s.sol:Struct --broadcast --rpc-url ${ETH_RPC_URL}
 ```
-
 You will then see Katana picking up the messages, and executing exactly as Starknet would
 do with Ethereum on testnet or mainnet.
+
+Example here where you can see the details of the message and the event being emitted `ValueReceivedFromL1`.
+```bash
+2024-01-26T12:42:17.934100Z  INFO messaging: L1Handler transaction added to the pool:
+|      tx_hash     | 0x1e39bb5ee5548d89e3f802c08b1e93ddaa519d8406f1c55ea07e0cd5c69c89a
+| contract_address | 0x754519eb51784c690fbd3deafb0e4c4bc017e6f60955fc7d0ba3e9b9b894831
+|     selector     | 0x5421de947699472df434466845d68528f221a52fce7ad2934c5dae2e1f1cdc
+|     calldata     | [0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 0x7b]
+
+2024-01-26T12:42:17.934808Z TRACE executor: Event emitted keys=[0x7acfbcb48c15c0b483370386499142617673e79567c0ef3937c3b2d57ac505, 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512]
+```
 You can try to change the payload into the scripts to see how the contract on starknet behaves receiveing the message. Try to set both values to 0 for the struct. In the case of the value, you'll see a warning in Katana saying `Invalid value` because the contract is expected `123`.
 
 ### To send messages L2 -> L1:
@@ -116,18 +126,18 @@ simulating the work done by the `StarknetMessaging` contract on L1 on testnet or
 You've to wait few seconds to see the confirmation of Katana that the messages has been sent to Anvil:
 
 ```bash
-2023-10-03T04:56:14.037491Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
-2023-10-03T04:56:21.048573Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0xd7da83e6fc13a8cdbe7d43e844bc3fa318bb12f88ea81c00dae33830723d1c88
-| from_address | 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973
+2024-01-26T12:45:25.932340Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
+2024-01-26T12:45:32.938959Z  INFO messaging: Message sent to settlement layer:
+|     hash     | 0xba2108f08983fc92f8b22cb656195ffad6a85d0b2abeeddffdbbda88b55b0625
+| from_address | 0x754519eb51784c690fbd3deafb0e4c4bc017e6f60955fc7d0ba3e9b9b894831
 |  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
 |   payload    | [0x1]
 
 
-2023-10-03T04:56:22.037049Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
-2023-10-03T04:56:29.046380Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0xfc16ed92ba1eb422d709dd38b684e2addc1dcd628fbd9b9acb31c57ad648ef35
-| from_address | 0x517ececd29116499f4a1b64b094da79ba08dfd54a3edaa316134c41f8160973
+2024-01-26T12:46:11.932363Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
+2024-01-26T12:46:18.936855Z  INFO messaging: Message sent to settlement layer:
+|     hash     | 0x85901f130082341c657781f1e314e885d77c53bbb5badb640e0bc931922303ae
+| from_address | 0x754519eb51784c690fbd3deafb0e4c4bc017e6f60955fc7d0ba3e9b9b894831
 |  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
 |   payload    | [0x1, 0x2]
 ```
