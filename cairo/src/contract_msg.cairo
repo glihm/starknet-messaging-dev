@@ -38,6 +38,8 @@ trait IContractL1<T> {
 mod contract_msg {
     use super::{IContractL1, MyData};
     use starknet::{EthAddress, SyscallResultTrait};
+    use core::num::traits::Zero;
+    use starknet::syscalls::send_message_to_l1_syscall;
 
     #[storage]
     struct Storage {}
@@ -113,15 +115,14 @@ mod contract_msg {
         fn send_message_value(ref self: ContractState, to_address: EthAddress, value: felt252) {
             // Note here, we "serialize" the felt252 value, as the payload must be
             // a `Span<felt252>`.
-            starknet::send_message_to_l1_syscall(to_address.into(), array![value].span())
-                .unwrap_syscall();
+            send_message_to_l1_syscall(to_address.into(), array![value].span()).unwrap_syscall();
         }
 
         fn send_message_struct(ref self: ContractState, to_address: EthAddress, data: MyData) {
             // Explicit serialization of our structure `MyData`.
             let mut buf: Array<felt252> = array![];
             data.serialize(ref buf);
-            starknet::send_message_to_l1_syscall(to_address.into(), buf.span()).unwrap_syscall();
+            send_message_to_l1_syscall(to_address.into(), buf.span()).unwrap_syscall();
         }
     }
 }

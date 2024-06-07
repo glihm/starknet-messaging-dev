@@ -1,9 +1,10 @@
 [package]
 name = "messaging_tuto"
 version = "0.1.0"
+edition = "2023_11"
 
 [dependencies]
-starknet = "=2.3.1"
+starknet = "=2.5.4"
 
 [[target.starknet-contract]]
 sierra = true
