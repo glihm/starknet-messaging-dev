@@ -52,11 +52,11 @@ To setup Ethereum part for local testing, please follow those steps:
 
 To setup Starknet contract, please follow those steps:
 
-1. Update katana on the 0.4.4 version to match starkli compatible version (temporary fix due to RPC incompatibility):
+1. Update katana on the 1.0.0-alpha.0 version to use the latest RPC version:
 
    ```bash
-   starkliup -v 0.2.9
-   dojoup -v 0.6.0
+   starkliup
+   dojoup -v 1.0.0-alpha.0
    ```
 
 2. Then open a terminal and starts katana by passing the messaging configuration where Anvil contract address and account keys are setup:
@@ -75,11 +75,14 @@ To setup Starknet contract, please follow those steps:
    # To ensure starkli env variables are setup correctly.
    source katana.env
 
+   # Scarb version is defined by `.tool-versions`
+   # Or use `asdf install scarb 2.6.3` then `asdf local scarb 2.6.3`.
+
    scarb build
 
-   starkli declare ./target/dev/messaging_tuto_contract_msg.contract_class.json --keystore-password ""
+   starkli declare ./target/dev/messaging_tuto_contract_msg.contract_class.json --compiler-version 2.6.2 --keystore-password ""
 
-   starkli deploy 0x051a7b3565ab605475512178fc157d743c9a394242ab60207a6932a25e087456 \
+   starkli deploy 0x031a19a9b048cb294ef143c9605447453c24238f840d6a1d5260c51197e7fab3 \
        --salt 0x1234 \
        --keystore-password ""
    ```
@@ -107,8 +110,8 @@ Example here where you can see the details of the message and the event being em
 
 ```bash
 2024-01-26T12:42:17.934100Z  INFO messaging: L1Handler transaction added to the pool:
-|      tx_hash     | 0x6d7a44291f7633fb379ce0e1eff254b6c6d60a2047d4542c627f6f883b43d2d
-| contract_address | 0x02defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c
+|      tx_hash     | 0x145f5ae1f2d2927fae497c91775d11f1dd2f69e007954fe95944cdd233aefb1
+| contract_address | 0x2defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c
 |     selector     | 0x5421de947699472df434466845d68528f221a52fce7ad2934c5dae2e1f1cdc
 |     calldata     | [0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 0x7b]
 
@@ -122,11 +125,11 @@ You can try to change the payload into the scripts to see how the contract on st
 ```bash
 # In the terminal that is inside the cairo folder you've used to run starkli commands to declare (ensure you've sourced the katana.env file).
 
-starkli invoke 0x02defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c \
+starkli invoke 0x055f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949 \
     send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 \
     --keystore-password ""
 
-starkli invoke 0x02defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c \
+starkli invoke 0x055f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949 \
     send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2 \
     --keystore-password ""
 ```
@@ -139,16 +142,16 @@ You've to wait few seconds to see the confirmation of Katana that the messages h
 ```bash
 2024-01-26T12:45:25.932340Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
 2024-01-26T12:45:32.938959Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0xadd65fa392fcdab9e8fdfd1ea4a1c78798bdf9c826af6449e2454829c6e80359
-| from_address | 0x2defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c
+|     hash     | 0xfa2f52b71312f606970bb50a3b80bb6a82dce8f624c66dc5593122b3797855fb
+| from_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
 |  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
 |   payload    | [0x1]
 
 
 2024-01-26T12:46:11.932363Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
 2024-01-26T12:46:18.936855Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0x10a085a7228104f7c9558bf7409da239cff0624b9df4301ccb2cb042cd1a3ede
-| from_address | 0x2defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c
+|     hash     | 0xaab137b4e03c12e24e90eb74189f32ffa9e5fdd3364c2b539ba69b9ea58cf6d6
+| from_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
 |  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
 |   payload    | [0x1, 0x2]
 ```
