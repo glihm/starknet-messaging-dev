@@ -110,8 +110,8 @@ Example here where you can see the details of the message and the event being em
 
 ```bash
 2024-01-26T12:42:17.934100Z  INFO messaging: L1Handler transaction added to the pool:
-|      tx_hash     | 0x145f5ae1f2d2927fae497c91775d11f1dd2f69e007954fe95944cdd233aefb1
-| contract_address | 0x2defe8eeb8e8c1cf59de8ba1a6844e8781d27e2ee20439204757b338f8ae74c
+|      tx_hash     | 0x79def1f8bf153138ab5f13cf85dbbd03ffa9b336ab27c81c432fdb63a9bc765
+| contract_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
 |     selector     | 0x5421de947699472df434466845d68528f221a52fce7ad2934c5dae2e1f1cdc
 |     calldata     | [0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 0x7b]
 
