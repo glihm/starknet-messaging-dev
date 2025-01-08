@@ -52,11 +52,11 @@ To setup Ethereum part for local testing, please follow those steps:
 
 To setup Starknet contract, please follow those steps:
 
-1. Update katana on the 1.0.0-alpha.0 version to use the latest RPC version:
+1. Update katana on the 1.0.9 version to use the latest RPC version:
 
    ```bash
    starkliup
-   dojoup -v 1.0.0-alpha.0
+   dojoup -v 1.0.9
    ```
 
 2. Then open a terminal and starts katana by passing the messaging configuration where Anvil contract address and account keys are setup:
@@ -80,11 +80,10 @@ To setup Starknet contract, please follow those steps:
 
    scarb build
 
-   starkli declare ./target/dev/messaging_tuto_contract_msg.contract_class.json --compiler-version 2.6.2 --keystore-password ""
+   starkli declare ./target/dev/messaging_tuto_contract_msg.contract_class.json --compiler-version 2.8.5
 
-   starkli deploy 0x031a19a9b048cb294ef143c9605447453c24238f840d6a1d5260c51197e7fab3 \
-       --salt 0x1234 \
-       --keystore-password ""
+   starkli deploy 0x0727468c660613faf8ebfbf149f05a9c3016702c362fccb69e9addb6ed1b934c \
+       --salt 0x1234
    ```
 
 4. Keep this terminal open to later send transactions on Katana.
@@ -109,13 +108,10 @@ do with Ethereum on testnet or mainnet.
 Example here where you can see the details of the message and the event being emitted `ValueReceivedFromL1`.
 
 ```bash
-2024-01-26T12:42:17.934100Z  INFO messaging: L1Handler transaction added to the pool:
-|      tx_hash     | 0x79def1f8bf153138ab5f13cf85dbbd03ffa9b336ab27c81c432fdb63a9bc765
-| contract_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
-|     selector     | 0x5421de947699472df434466845d68528f221a52fce7ad2934c5dae2e1f1cdc
-|     calldata     | [0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 0x7b]
-
-2024-01-26T12:42:17.934808Z TRACE executor: Event emitted keys=[0x7acfbcb48c15c0b483370386499142617673e79567c0ef3937c3b2d57ac505, 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512]
+2025-01-08T21:47:12.431364Z  INFO messaging: L1Handler transaction added to the pool. tx_hash=0x51ab77a5b4fb2188fd270c59f56916bfff4636ca4da8a0a95438e4c2287437c contract_address=0x26558b1ab48a5411f589d8ec66fdef5e6dd9c2f88f7f9274b88997444248aec selector=0x5421de947699472df434466845d68528f221a52fce7ad2934c5dae2e1f1cdc calldata=0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 0x7b
+2025-01-08T21:47:12.431377Z  INFO pool: Transaction received. hash="0x51ab77a5b4fb2188fd270c59f56916bfff4636ca4da8a0a95438e4c2287437c"
+2025-01-08T21:47:12.431398Z  INFO messaging: Collected messages from settlement chain. msg_count=1
+2025-01-08T21:47:12.432088Z TRACE executor: Transaction resource usage. usage="steps: 1385 | memory holes: 0 | pedersen_builtin: 12 | range_check_builtin: 19"
 ```
 
 You can try to change the payload into the scripts to see how the contract on starknet behaves receiveing the message. Try to set both values to 0 for the struct. In the case of the value, you'll see a warning in Katana saying `Invalid value` because the contract is expected `123`.
@@ -125,13 +121,11 @@ You can try to change the payload into the scripts to see how the contract on st
 ```bash
 # In the terminal that is inside the cairo folder you've used to run starkli commands to declare (ensure you've sourced the katana.env file).
 
-starkli invoke 0x055f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949 \
-    send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 \
-    --keystore-password ""
+starkli invoke 0x26558b1ab48a5411f589d8ec66fdef5e6dd9c2f88f7f9274b88997444248aec \
+    send_message_value 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1
 
-starkli invoke 0x055f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949 \
-    send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2 \
-    --keystore-password ""
+starkli invoke 0x26558b1ab48a5411f589d8ec66fdef5e6dd9c2f88f7f9274b88997444248aec \
+    send_message_struct 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 1 2
 ```
 
 You will then see Katana sending transactions to L1 to register the hashes of the messages,
@@ -140,20 +134,20 @@ simulating the work done by the `StarknetMessaging` contract on L1 on testnet or
 You've to wait few seconds to see the confirmation of Katana that the messages has been sent to Anvil:
 
 ```bash
-2024-01-26T12:45:25.932340Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
-2024-01-26T12:45:32.938959Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0xfa2f52b71312f606970bb50a3b80bb6a82dce8f624c66dc5593122b3797855fb
-| from_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
-|  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
-|   payload    | [0x1]
+2025-01-08T21:48:17.978664Z  INFO pool: Transaction received. hash="0x6aba5937d0ed0ce06486cc554898306cc7670cc85e82d6f39ee1c67bd0ab885"
+2025-01-08T21:48:17.990643Z TRACE executor: Transaction resource usage. usage="steps: 5913 | memory holes: 53 | ec_op_builtin: 3 | pedersen_builtin: 20 | range_check_builtin: 136"
+2025-01-08T21:48:17.991560Z  INFO katana::core::backend: Block mined. block_number=5 tx_count=1
+2025-01-08T21:48:18.449588Z  INFO messaging: Collected messages from settlement chain. msg_count=0
+2025-01-08T21:48:18.450702Z  INFO messaging: Message sent to settlement layer. hash=0x37857b83ff01d1f42340b94d28c148939c6a050e6c2f25bfc425cf2d760b6553 from_address=0x26558b1ab48a5411f589d8ec66fdef5e6dd9c2f88f7f9274b88997444248aec to_address=0xe7f1725e7734ce288f8367e1bb143e90bb3f0512 payload=0x1
+2025-01-08T21:48:18.450738Z  INFO messaging: Sent messages to the settlement chain. msg_count=1
 
 
-2024-01-26T12:46:11.932363Z DEBUG katana_core::service::messaging::ethereum: Sending transaction on L1 to register messages...
-2024-01-26T12:46:18.936855Z  INFO messaging: Message sent to settlement layer:
-|     hash     | 0xaab137b4e03c12e24e90eb74189f32ffa9e5fdd3364c2b539ba69b9ea58cf6d6
-| from_address | 0x55f3fc5db292152d8daac01c1427f8a147d824d9cbe44c8d030b72fd3f35949
-|  to_address  | 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512
-|   payload    | [0x1, 0x2]
+2025-01-08T21:48:43.952621Z  INFO pool: Transaction received. hash="0x6753e9c03461a3adeb944294bfb76d256934aeb9fc693082aab8c584445dc9a"
+2025-01-08T21:48:43.964609Z TRACE executor: Transaction resource usage. usage="steps: 5937 | memory holes: 53 | ec_op_builtin: 3 | pedersen_builtin: 21 | range_check_builtin: 136"
+2025-01-08T21:48:43.965437Z  INFO katana::core::backend: Block mined. block_number=6 tx_count=1
+2025-01-08T21:48:44.467839Z  INFO messaging: Collected messages from settlement chain. msg_count=0
+2025-01-08T21:48:44.471201Z  INFO messaging: Message sent to settlement layer. hash=0x9a853bfe92bb85e2d377cba8df36ef8af1a1da1c8f8a9c2c966ad737e8f79e8b from_address=0x26558b1ab48a5411f589d8ec66fdef5e6dd9c2f88f7f9274b88997444248aec to_address=0xe7f1725e7734ce288f8367e1bb143e90bb3f0512 payload=0x1, 0x2
+2025-01-08T21:48:44.471214Z  INFO messaging: Sent messages to the settlement chain. msg_count=1
 ```
 
 To then consume the messages, you must send a transaction on Anvil, exactly as you would do
