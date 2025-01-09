@@ -5,6 +5,7 @@ edition = "2023_11"
 
 [dependencies]
 starknet = "=2.8.4"
+piltover = { git = "https://github.com/keep-starknet-strange/piltover.git", branch = "feat/messaging-test" }
 
 [[target.starknet-contract]]
 sierra = true
