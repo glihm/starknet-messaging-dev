@@ -1,0 +1,7 @@
+StateMaps {
+    nonces: {},
+    class_hashes: {},
+    storage: {},
+    compiled_class_hashes: {},
+    declared_contracts: {},
+}

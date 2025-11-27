@@ -1,12 +1,13 @@
-//! A simple contract aims at being deployed on an appchain
-//! to send/receive messages from Starknet.
+//! A simple contract to be deployed on the appchain
+//! to send/receive messages to Starknet.
 //!
-//! This contract can sends messages using the send message to l1
-//! syscall as we normally do for messaging.
+//! This contract can send messages using the `send_message_to_l1_syscall`
+//! syscall, but the l1 in this configuration is Starknet.
 //!
-//! However, the `to_address` is set to the `MSG` magic value since
-//! this field is restricted to a valid Ethereum address, too small to
-//! be a valid Starknet address.
+//! In this demo contract, the addresses we send messages to or receive messages from are exposed as
+//! functions parameters. In real life scenario, you may want to store the addresses in the contract
+//! storage, and only expose entrypoints useful to your users and the messages are related to the
+//! business logic of your app.
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -23,12 +24,12 @@ trait IContractAppchain<T> {
 }
 
 #[starknet::contract]
-mod contract_msg_starknet {
-    use super::IContractAppchain;
-    use starknet::{ContractAddress, SyscallResultTrait};
+mod appc_msg_sn {
     use starknet::syscalls::send_message_to_l1_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait};
+    use super::IContractAppchain;
 
-    const MSG_TO_L2_MAGIC: felt252 = 'MSG';
+    const WHITELISTED_VALUE: felt252 = 888;
 
     #[storage]
     struct Storage {}
@@ -44,17 +45,19 @@ mod contract_msg_starknet {
     /// * `value` - Expected value in the payload (automatically deserialized).
     #[l1_handler]
     fn msg_handler_value(ref self: ContractState, from_address: felt252, value: felt252) {
+        // Security check: since any contract on Starknet may send messages to the appchain, you
+        // must check the sender address is a contract you allowed to send messages.
         // assert(from_address == ...);
 
-        assert(value == 888, 'Invalid value');
+        // An assert to demonstrate the behavior when an error occurs when receiving a message
+        // from the base layer.
+        assert(value == WHITELISTED_VALUE, 'Invalid value');
     }
 
     #[abi(embed_v0)]
     impl ContractAppChainImpl of IContractAppchain<ContractState> {
         fn send_message(ref self: ContractState, to_address: ContractAddress, value: felt252) {
-            // Since the blockifier does not support sending to an address larger than `EthAddress`,
-            // we send the address as the first value of the payload, and use the magic value `MSG` as the `to_address`.
-            send_message_to_l1_syscall(MSG_TO_L2_MAGIC, array![to_address.into(),value].span()).unwrap_syscall();
+            send_message_to_l1_syscall(to_address.into(), array![value].span()).unwrap_syscall();
         }
     }
 }

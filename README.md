@@ -179,6 +179,8 @@ The core contract is piltover, and can be found [here](https://github.com/keep-s
 
 In the context of testing here, we are only interested in the messaging interface of the core contract. In the same fashion we skip the proof generation and verification steps for L1-L2 messaging, we will skip the proof generation and verification steps for L2-L3 messaging by registrering the messages directly calling the core contract test functions on L2.
 
+Before starting, ensure that you have all the tools correctly installed with `asdf` by running `asdf install`.
+
 ## Startup the two sequencers (L2 and L3)
 
 ```bash
@@ -189,19 +191,9 @@ katana --dev --http.port 9999
 The appchain Katana must be started with the `--messaging` flag, pointing to the L2 sequencer
 and the core contract address.
 
-Currently, to support starknet messaging, you must clone dojo and build katana with the `starknet-messaging` feature enabled.
-A future release will include the starknet messaging feature by default.
-```bash
-git clone https://github.com/dojoengine/dojo.git
-cd dojo
-git checkout refactor/sn-messaging
-cargo build --bin katana -r --features starknet-messaging
-```
-
 Start the appchain sequencer pointing to the L2 sequencer (the configuration file already contains the L2 core contract address).
 ```bash
-# Appchain sequencer (L3).
-/dojo/target/release/katana --dev --messaging l3.messaging.json --http.port 7777
+katana --dev --messaging ./l3.messaging.json --http.port 7777
 ```
 
 Now open a new terminal and heads to `cairo` folder from where the next commands will be executed.

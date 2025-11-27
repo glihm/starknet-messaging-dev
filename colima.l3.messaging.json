@@ -1,6 +1,6 @@
 {
   "chain": "starknet",
-  "rpc_url": "http://127.0.0.1:50000",
+  "rpc_url": "http://host.lima.internal:50000",
   "contract_address": "0x4dabc9ad4c0c430862edf197c5d9f9d4e7903cc8ffc719c426f44976835b0c2",
   "sender_address": "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec",
   "private_key": "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912",

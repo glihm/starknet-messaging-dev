@@ -1,0 +1,10 @@
+[world]
+name = "demo"
+seed = "123"
+
+[namespace]
+default = "ns"
+
+[[target.starknet-contract]]
+sierra = true
+build-external-contracts = ["dojo::world::world_contract::world"]

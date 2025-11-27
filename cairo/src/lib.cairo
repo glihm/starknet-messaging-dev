@@ -1,3 +1,4 @@
-mod contract_msg;
-mod contract_msg_starknet;
-mod sn_1;
+mod appc_msg;
+mod appc_msg_sn;
+mod sn_msg;
+mod fact_registry_mock;

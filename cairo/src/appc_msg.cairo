@@ -35,7 +35,7 @@ trait IContractL1<T> {
 }
 
 #[starknet::contract]
-mod contract_msg {
+mod appc_msg {
     use super::{IContractL1, MyData};
     use starknet::{EthAddress, SyscallResultTrait};
     use core::num::traits::Zero;
