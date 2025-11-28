@@ -12,6 +12,22 @@ Please before start, install:
 - [katana](https://github.com/dojoengine/katana) you must currently use this [very specific version 1.7.0-snos.2](https://github.com/dojoengine/katana/pkgs/container/katana/579546066?tag=v1.7.0-snos.2) via docker for the L3 sequencer. For the L2 sequencer, you can use the latest stable version of Katana.
 - [saya](https://github.com/dojoengine/saya) TODO -> make a release + ASDF @glihm.
 
+**CURRENTLY WIP ON SNOS ISSUE**
+
+Issue on SNOS about gas when we have at least 1 message for L2 in a L3 block.
+To reproduce:
+
+Debug setup:
+Katana L2 started with latest stable `1.7.0`.
+Katana L3 started on the branch `feat/update-gen-and-statefull-compr` on commit `95323f35b43e392e1e3988a9136737edfdd36ddd`.
+Saya on branch `feat/update-to-new-snos` on commit `8dc989fc01b479051c4c553f5ed366a4b85e846c`.
+For sozo to execute the command, use sozo `1.8.3` to have access to declare/deploy/invoke commands.
+
+And then follow the tutorial until the moment when sending a message L3 -> L2.
+
+**--**
+
+
 To follow the tutorial, it is recommended to open 4 terminals:
 1. One to spinup Katana L2 sequencer.
 2. One to spinup Katana L3 sequencer.
@@ -209,5 +225,3 @@ sozo invoke \
 ```bash
 cargo run --bin saya -- persistent start --settlement-piltover-address 0x264db9b9a80aae61c01371d0fc0ec751b80f96b6e861bdcf61e608673681178 --settlement-account-address 0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec --settlement-account-private-key 0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912 --mock-snos-from-pie --rollup-rpc http://127.0.0.1:51000 --settlement-rpc http://127.0.0.1:50000 --atlantic-key local --mock-layout-bridge-program-hash 0x43c5c4cc37c4614d2cf3a833379052c3a38cd18d688b617e2c720e8f941cb8
 ```
-
-// Issue on SNOS about gas when we have at least 1 message for L2 in a L3 block.
