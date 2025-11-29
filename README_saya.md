@@ -322,6 +322,11 @@ I you've enabled the `RUST_LOG` for debug for Katana, you should see the message
 Now, we need to wait Saya picking up the block with this transaction, and advance the state of the appchain
 on the L2 sequencer.
 
+Saya should display the message if you have enabled the `saya=debug` logs.
+```bash
+[2025-11-29T00:20:00Z DEBUG saya_core::settlement::piltover] Message to L1: MessageToL1 { from_address: 0xbe8c1b5ddc2edacb375bc8734b8a96d618f8213df8bd531e60fa338c0aa429, to_address: 0x3c87be0be4d0ff385fe08d8beb0a1c2861c8133d54dfa73e27b082748b5c2a1, payload: [0x6f] }
+```
+
 You should see something like this in the Saya logs:
 ```bash
 [2025-11-28T15:37:43Z INFO  saya_core::orchestrator::persistent] Chain advanced to new block block_number=6 transaction_hash=0x448978cbfa2a47b900aae794694bc8119f625c93143891303b0339a210631d3
