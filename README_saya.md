@@ -20,7 +20,7 @@ Please before start, install:
 - [saya](https://github.com/dojoengine/saya) installed via ASDF:
    ```bash
    asdf plugin add saya https://github.com/dojoengine/asdf-saya.git
-   asdf install saya 0.2.0
+   asdf install saya 0.2.1
    ```
 - [katana](https://github.com/dojoengine/katana) you must currently use this [very specific version 1.7.0-snos.3](https://github.com/dojoengine/katana/pkgs/container/katana/593195481?tag=v1.7.0-snos.3) via docker for the L3 sequencer. For the L2 sequencer, you can use the latest stable version of Katana.
 
@@ -250,7 +250,7 @@ To work, Saya requires an account on the settlement chain (Starknet L2) to advan
 
 ```bash
 # In an other terminal.
-RUST_LOG=saya=info \
+RUST_LOG=saya=debug \
    saya persistent start \
    --settlement-rpc ${KATANA_L2_RPC} \
    --settlement-piltover-address ${PILTOVER_ADDRESS} \
@@ -260,6 +260,8 @@ RUST_LOG=saya=info \
    --mock-snos-from-pie \
    --mock-layout-bridge-program-hash 0x43c5c4cc37c4614d2cf3a833379052c3a38cd18d688b617e2c720e8f941cb8
 ```
+
+It is using the `saya=debug` to make sure you have the logs to see messages being processed.
 
 The command is still a bit verbose, but it will be simplified in the future.
 The settlement account is for now a default account on Katana, you can adjust depending on your configuration.
