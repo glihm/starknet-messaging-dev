@@ -12,10 +12,10 @@ Please before start, install:
    asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
    asdf install scarb 2.13.1
    ```
-- [sozo](https://github.com/dojoengine/sozo) installed via ASDF is the easiest way to go and you must use the latest version `1.8.3` to have access to declare/deploy/invoke commands.
+- [sozo](https://github.com/dojoengine/sozo) installed via ASDF is the easiest way to go and you must use the latest version `1.8.5` to have access to declare/deploy/invoke commands.
    ```bash
    asdf plugin add sozo https://github.com/dojoengine/asdf-sozo.git
-   asdf install sozo 1.8.3
+   asdf install sozo 1.8.5
    ```
 - [saya](https://github.com/dojoengine/saya) installed via ASDF:
    ```bash
