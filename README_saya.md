@@ -12,17 +12,17 @@ Please before start, install:
    asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
    asdf install scarb 2.13.1
    ```
-- [sozo](https://github.com/dojoengine/sozo) installed via ASDF is the easiest way to go and you must use the latest version `1.8.3` to have access to declare/deploy/invoke commands.
+- [sozo](https://github.com/dojoengine/sozo) installed via ASDF is the easiest way to go and you must use at least version `1.8.3` to have access to declare/deploy/invoke commands (`1.8.6` is recommended).
    ```bash
    asdf plugin add sozo https://github.com/dojoengine/asdf-sozo.git
-   asdf install sozo 1.8.3
+   asdf install sozo 1.8.6
    ```
 - [saya](https://github.com/dojoengine/saya) installed via ASDF:
    ```bash
    asdf plugin add saya https://github.com/dojoengine/asdf-saya.git
-   asdf install saya 0.2.1
+   asdf install saya 0.2.2
    ```
-- [katana](https://github.com/dojoengine/katana) you must currently use this [very specific version 1.7.0-snos.3](https://github.com/dojoengine/katana/pkgs/container/katana/593195481?tag=v1.7.0-snos.3) via docker for the L3 sequencer. For the L2 sequencer, you can use the latest stable version of Katana.
+- [katana](https://github.com/dojoengine/katana) you must currently use this [very specific version 1.7.0-snos.4](https://github.com/dojoengine/katana/pkgs/container/katana/679535262?tag=v1.7.0-snos.4) via docker for the L3 sequencer. For the L2 sequencer, you can use the latest stable version of Katana.
 
 To follow the tutorial, it is recommended to open 4 terminals:
 1. One to spinup Katana L2 sequencer.
@@ -39,7 +39,7 @@ When messaging is between L2 (starknet) and L3 (appchain), the general flow is t
 
 The core contract is piltover, and can be found [here](https://github.com/keep-starknet-strange/piltover), and more specifically the [messaging interface](https://github.com/keep-starknet-strange/piltover/blob/main/src/messaging/interface.cairo).
 
-Katana is already including a piltover compiled contract that we will see in a minute. The exact revision used for piltover is on the [Cartridge fork of the piltover repository](https://github.com/cartridge-gg/piltover/tree/feat/remove-snos-output).
+In the new flow, Saya already has the compatible piltover version pre-compiled and ready to use.
 
 The canonical flow to have the appchain state and messages updates on Starknet is the following:
 
@@ -56,7 +56,7 @@ Few contracts involved here:
 2. `sn_msg`: Contract to be deployed on Starknet (L2) to receive/send messages to the appchain (L3).
 3. `appc_msg_sn`: Contract to be deployed on the appchain (L3) to receive/send messages to Starknet (L2).
 
-As you notice, piltover is not listed here. This is because Katana includes an `init` command that does it for us. Since Piltover requires specific configuration to match the generated proofs, we let Katana handling this automatically.
+As you notice, piltover is not listed here. This is because Saya includes `core-contract` commands that deploy and configure piltover for us. Since Piltover requires specific configuration to match the generated proofs, we let Saya handling this.
 
 Let's head to the `cairo` folder and compile the contracts:
 ```bash
@@ -76,106 +76,82 @@ Let's start by starting the sequencer acting like Starknet (L2). You can use the
 # In an other terminal.
 katana --dev --dev.no-fee --http.port 50000
 ```
+
+Let's setup some environment variables for the commands to follow, using default Katana first account.
 ```bash
-export KATANA_L2_RPC=http://localhost:50000
+export SETTLEMENT_ACCOUNT_ADDRESS=0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec
+export SETTLEMENT_ACCOUNT_PRIVATE_KEY=0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912
+export SETTLEMENT_RPC_URL=http://localhost:50000
+export SETTLEMENT_CHAIN_ID=KATANA
 ```
 
-Let's then declare and deploy the mocked fact registry contract:
+Let's then declare and deploy the mocked fact registry contract.
 ```bash
-sozo declare target/dev/sn_msg_dev_fact_registry_mock.contract_class.json \
-   --katana-account katana0 \
-   --rpc-url ${KATANA_L2_RPC}
+saya core-contract declare-and-deploy-fact-registry-mock --salt 0x0
 
-sozo deploy 0x01d42b549cf7a09fc7ffdd176a0addf6e7d26d81678240597e58f1103952faf8 \
-   --katana-account katana0 \
-   --salt 0x1234 \
-   --rpc-url ${KATANA_L2_RPC}
-
-# Update to your address depending on your Katana version it may change.
-export FACT_REGISTRY_MOCK_ADDRESS=0x03b041d3612bc1f29331e8de56945a1f0a580001e59a7c93e81d69e07981027b
+export FACT_REGISTRY_ADDRESS=0x3eb0d510d1238120bf7f9d176faafe0c7066797a86be985855952f87769d3bd
 ```
 
-Now, let's use Katana init to deploy and configure piltover for us. For this action, you must use the Katana version specific to the L3 appchain (v1.7.0-snos.2).
-
-If you are using a different docker runtime, you may need to change the `KATANA_L2_RPC` environment variable to something like:
-```bash
-# Example using Colima.
-export KATANA_L2_RPC_DOCKER=http://host.lima.internal:50000
-
-# Otherwise, just use the local address.
-export KATANA_L2_RPC_DOCKER=http://localhost:50000
-```
-
-We use an other variable here, since it's only for the dockerized version of Katana to correctly target the L2 sequencer.
-Otherwise, from your terminal, when you will want to send transactions to the L2 sequencer, you will use `KATANA_L2_RPC` environment variable.
-
-The next command is quite big, but the key points are:
-1. Using a volume to ensure the chain configuration is persisted between runs.
-2. Using `--env` to pass the variables exported in our current terminal session.
-3. Using `--network=host` to ensure the container can reach the L2 sequencer without worrying about the network configuration.
+Now let's use Saya again to declare, deploy and configure the core contract..
 
 ```bash
-# Create the named volume for the Katana L3 DB.
-docker volume create katana-l3
+saya core-contract declare
+saya core-contract deploy --salt 0x0
 
-# The account address and private key matches default katana accounts if you have used a recent
-# version of Katana for the Starknet L2 we just started.
-docker run --rm -it --name katana-l3 \
---env FACT_REGISTRY_MOCK_ADDRESS=${FACT_REGISTRY_MOCK_ADDRESS} \
---env KATANA_L2_RPC_DOCKER=${KATANA_L2_RPC_DOCKER} \
--v katana-l3:/data \
---network=host \
-ghcr.io/dojoengine/katana:v1.7.0-snos.3 \
-katana init \
---settlement-chain ${KATANA_L2_RPC_DOCKER} \
---id katana-l3 \
---settlement-account-private-key 0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912 \
---settlement-account-address 0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec \
---settlement-facts-registry ${FACT_REGISTRY_MOCK_ADDRESS} \
---output-path /data/katana-l3.json
+# You should see an output like:
+# [2026-02-10T22:45:37Z INFO  saya::core_contract::cli] Core contract address: 0x1c8a55203cd99a6bfaf7cd91ae2ad953eff67b584826edab1857ca2e3c5db5d
+# You must also take not of the block number at which the core contract was deployed, we will use it later.
 
-# Take note of the piltover address and export it (katana uses an internal salt for this contract, it will change between runs. Use a volume for Katana DB if you want to maintain the contract).
-export PILTOVER_ADDRESS=0x77e3020f9e6ce3d6e7cbbf8e35a302c1658d3c5897409a5f9e6ba2812b858fb
-```
+export CORE_CONTRACT_ADDRESS=0x1c8a55203cd99a6bfaf7cd91ae2ad953eff67b584826edab1857ca2e3c5db5d
+export CORE_CONTRACT_DEPLOYED_BLOCK=4
 
-The Katana outputs the piltover address in the log this way:
-```bash
-✓ Deployment successful (0x77e3020f9e6ce3d6e7cbbf8e35a302c1658d3c5897409a5f9e6ba2812b858fb) at block #4
+# katana-l3 is the chain is that will be used to run the appchain.
+saya core-contract setup-program --chain-id katana-l3
 ```
 
 Now that we have the piltover address, we can deploy the `sn_msg` contract on Starknet:
 ```bash
 sozo declare target/dev/sn_msg_dev_sn_msg.contract_class.json \
    --katana-account katana0 \
-   --rpc-url ${KATANA_L2_RPC}
+   --rpc-url ${SETTLEMENT_RPC_URL}
 
 sozo deploy 0x011dceea1eeb800a2a87454e424acb9158b5c649687d92a045c3eb6b73a182db \
-   --constructor-calldata ${PILTOVER_ADDRESS} \
+   --constructor-calldata ${CORE_CONTRACT_ADDRESS} \
    --salt 0x1234 \
    --katana-account katana0 \
-   --rpc-url ${KATANA_L2_RPC}
+   --rpc-url ${SETTLEMENT_RPC_URL}
 
 # Take note of the address and export it, it will change between runs since Piltover address is
 # changing too (and is passed to the constructor of the sn_msg contract).
-export SN_MSG_ADDRESS=0x03c87be0be4d0ff385fe08d8beb0a1c2861c8133d54dfa73e27b082748b5c2a1
+export SN_MSG_ADDRESS=0x05caadeae8dae02b47180f7e26a999d35e63be5f0fe773c7ebf93461fa25a513
 ```
 
 ## Setup the L3 (Appchain)
 
-If you've noticed, we've used a `--id` flag for Katana `init` command. This saves a file locally with the chain configuration, which includes the messaging configuration. We then use the `--chain` flag to use this file (note that this is a different concept than `--chain-id`).
+To setup the L3 appchain, you must use the SNOS version of Katana v1.7.0-snos.4. From docker, or binary compiled from the commit `de6274a48b4c7d28c26a9aa1cc162da717f9e6f1`.
+
+Use `katana init` command to create an appchain chain spec file. We will use a chain id name of `katana-l3`.
 
 ```bash
-docker run --rm -it --name katana-l3 \
--v katana-l3:/data \
---network=host \
-ghcr.io/dojoengine/katana:v1.7.0-snos.3 \
-katana --chain /data/katana-l3.json --http.port 51000
+katana init \
+  --settlement-chain ${SETTLEMENT_RPC_URL} \
+  --id katana-l3 \
+  --settlement-contract ${CORE_CONTRACT_ADDRESS} \
+  --settlement-contract-deployed-block ${CORE_CONTRACT_DEPLOYED_BLOCK} \
+  --settlement-facts-registry ${FACT_REGISTRY_ADDRESS}
+```
 
-# For more logs, you can add this --env variable to the command:
---env RUST_LOG="katana=info,rpc=info,node=info,messaging=trace,executor=trace,pool=trace"
+If you've noticed, we've used a `--id` flag for Katana `init` command. This saves a file locally with the chain configuration, which includes the messaging configuration. We then use the `--chain` flag to use this file (note that this is a different concept than `--chain-id`).
 
-# And then export the RPC URL:
-export KATANA_L3_RPC=http://localhost:51000
+Open a fresh terminal (and not the one used with all the environment variables exported) and start the Katana L3 sequencer.
+```bash
+katana --chain katana-l3 --http.port 51000 --db-dir /tmp/katana-l3
+
+# For more logs, you can add this before the binary execution:
+RUST_LOG="katana=info,rpc=info,node=info,messaging=trace,executor=trace,pool=trace" \
+katana --chain katana-l3 --http.port 51000 --db-dir /tmp/katana-l3
+
+# Or use the `--env` flag to set the environment variable:
 ```
 
 Please note that since we have a specific chain spec for this L3 appchain, the account generated may change depending on your configuration. When Katana is starting, the account will be displayed:
@@ -252,10 +228,10 @@ To work, Saya requires an account on the settlement chain (Starknet L2) to advan
 # In an other terminal.
 RUST_LOG=saya=debug \
    saya persistent start \
-   --settlement-rpc ${KATANA_L2_RPC} \
-   --settlement-piltover-address ${PILTOVER_ADDRESS} \
-   --settlement-account-address 0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec \
-   --settlement-account-private-key 0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912 \
+   --settlement-rpc ${SETTLEMENT_RPC_URL} \
+   --settlement-piltover-address ${CORE_CONTRACT_ADDRESS} \
+   --settlement-account-address ${SETTLEMENT_ACCOUNT_ADDRESS} \
+   --settlement-account-private-key ${SETTLEMENT_ACCOUNT_PRIVATE_KEY} \
    --rollup-rpc ${KATANA_L3_RPC} \
    --mock-snos-from-pie \
    --mock-layout-bridge-program-hash 0x43c5c4cc37c4614d2cf3a833379052c3a38cd18d688b617e2c720e8f941cb8
@@ -279,6 +255,47 @@ Otherwise, if you kill Saya, and restart it, it will anyway check the appchain s
 - Don't forget that Katana as a persistent state available with a database. If you want to resume to a known state, the `saya.db` must match the state of your appchain too!
 
 - If you restart the L3 from scratch, but not the L2, then Saya will not be able to recover (which is expected), since you may generate a new history of blocks on the L3 that doesn't match the state of the L2.
+
+**Notes on posting DA to Celestia:**
+- To enable the DA posting to Celestia, you must start Saya with those additional arguments:
+```bash
+--celestia-rpc <CELESTIA_RPC_URL> \
+--celestia-token <CELESTIA_TOKEN> \
+--celestia-namespace <CELESTIA_NAMESPACE>
+```
+
+By setting those, Saya will automatically post the DA to Celestia, and the DA cursor will be settle on Piltover.
+
+You will see a log like this in the Saya logs:
+```bash
+[2026-02-11T02:44:54Z INFO  saya_core::data_availability::celestia] Blob posted on Celestia. block_number=5 celestia_block=10034708 namespace="AAAAAAAAAAAAAAAAAAAAAAAAAHNheWFnbGlobTE=" commitment="ee0ee3ec708f650580f9ea82246030748f07ccc50a522e42a5f8ce118fddceae"
+```
+
+In order to retrieve the blob, you can use [Celenium](https://mocha-4.celenium.io), and you can paste your namespace id into the search bar.
+
+To compute a namespace id, just use Saya subcommand:
+```bash
+saya celestia namespace testns1
+```
+This will output:
+```bash
+Version: 0
+Hex: 0x00000000000000000000000000000000000000000000746573746e7331
+Base64: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHRlc3RuczE=
+Namespace ID (last 10 bytes): 0x000000746573746e7331
+Raw bytes length: 29
+```
+Just use the base64 `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAHRlc3RuczE=` of the namespace id to search it in Celenium.
+
+You can also use the `blob-get` from Saya if you want to do it from the terminal:
+```bash
+saya celestia blob-get \
+   --rpc-url <CELESTIA_RPC_URL> \
+   --height <HEIGHT> \
+   --commitment <COMMITMENT> \
+   --namespace-base64 <NAMESPACE_BASE64> \
+   --auth-token <CELESTIA_TOKEN>
+```
 
 ## Sending messages L2 -> L3
 
